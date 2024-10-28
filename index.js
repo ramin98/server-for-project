@@ -7,6 +7,8 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+app.use(express.static('public'))
+
 function generateRandomId(length) {
   const characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -24,6 +26,7 @@ let goods = [
       "Основание из полированной нержавеющей стали, придает оригинальный парящий эффект.",
     product_price: 120000,
     id: generateRandomId(8),
+    url:'http://localhost:5000/photos/photo1.png'
   },
   {
     product_name: "Кресло VILORA",
@@ -31,6 +34,7 @@ let goods = [
       "Мягкое и уютное, аккуратное и стильное. Упругие подушки сиденья и приятная на ощупь ткань.",
     product_price: 21000,
     id: generateRandomId(8),
+    url:'http://localhost:5000/photos/photo2.png'
   },
   {
     product_name: "Стол MENU",
@@ -38,6 +42,7 @@ let goods = [
       "Европейский дуб - отличается особой прочностью и стабильностью.",
     product_price: 34000,
     id: generateRandomId(8),
+    url:'http://localhost:5000/photos/photo3.png'
   },
   {
     product_name: "Диван ASKESTA",
@@ -45,6 +50,7 @@ let goods = [
       "Благодаря защелкивающемуся механизму диван легко раскладывается в комфортную кровать",
     product_price: 68000,
     id: generateRandomId(8),
+    url:'http://localhost:5000/photos/photo4.png'
   },
   {
     product_name: "Кресло LUNAR",
@@ -52,6 +58,7 @@ let goods = [
       "Прекрасно переносит солнечные лучи, перепады влажности и любые осадки",
     product_price: 40000,
     id: generateRandomId(8),
+    url:'http://localhost:5000/photos/photo5.png'
   },
   {
     product_name: "Шкаф Nastan",
@@ -59,6 +66,7 @@ let goods = [
       "Мебель может быть оснащена разнообразными системами подсветки.",
     product_price: 80000,
     id: generateRandomId(8),
+    url:'http://localhost:5000/photos/photo6.png'
   },
 ];
 
