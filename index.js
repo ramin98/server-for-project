@@ -91,8 +91,9 @@ app.get("/orders", async (req, res) => {
 app.post("/add-orders", async (req, res) => {
   try {
     let obj = req.body;
+    obj.id = generateRandomId(8);
     orders.push(obj);
-    res.json({ text: `Заказ клиента ${obj.customerName} был добавлен` });
+    res.json({ text: `Заказ клиента ${obj.customer_name} был добавлен` });
   } catch (error) {
     res.status(500).json({ text: "Ошибка добавления заказа" });
   }
@@ -122,7 +123,7 @@ app.post("/add-admin", async (req, res) => {
       let id = generateRandomId(8);
       obj.id = id;
       goods.push(obj);
-      res.json({ text: `Товар с именем ${obj.product_name} был добавлен`, id });
+      res.json({ text: `Товар с именем ${obj.product_name} был добавлен`, id, case: true });
     }
   } catch (error) {
     res.status(500).json({ text: "Ошибка добавления товара" });
