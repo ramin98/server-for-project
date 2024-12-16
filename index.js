@@ -1,17 +1,32 @@
+
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const multer = require("multer");
+const path = require("path");
 const PORT = 5000;
 const app = express();
 
+// Middleware setup
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static('public'));
 
-app.use(express.static('public'))
+// Set up storage for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/photos"); // Directory where files will be saved
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname)); // Generate unique file name
+  },
+});
+
+const upload = multer({ storage });
 
 function generateRandomId(length) {
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
@@ -70,8 +85,10 @@ let goods = [
   },
 ];
 
+
 let orders = [];
 
+// Routes
 app.get("/goods", async (req, res) => {
   try {
     res.json(goods);
@@ -99,6 +116,24 @@ app.post("/add-orders", async (req, res) => {
   }
 });
 
+// Add a new product with file upload
+app.post("/add-admin", upload.single("file"), async (req, res) => {
+  try {
+    const obj = JSON.parse(req.body.data); // Parse JSON data sent along with the file
+    if (goods.some((item) => item.product_name === obj.product_name)) {
+      res.status(400).json({ text: "Этот товар уже есть в массиве", case: false });
+    } else {
+      const fileUrl = req.file ? `http://localhost:5000/photos/${req.file.filename}` : null;
+      let id = generateRandomId(8);
+      const newProduct = { ...obj, id, url: fileUrl };
+      goods.push(newProduct);
+      res.json({ text: `Товар с именем ${obj.product_name} был добавлен`, id, case: true });
+    }
+  } catch (error) {
+    res.status(500).json({ text: "Ошибка добавления товара" });
+  }
+});
+
 app.delete("/delete-admin/:id", async (req, res) => {
   try {
     let id = req.params.id;
@@ -111,22 +146,6 @@ app.delete("/delete-admin/:id", async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ text: "Ошибка удаления товара" });
-  }
-});
-
-app.post("/add-admin", async (req, res) => {
-  try {
-    let obj = req.body;
-    if (goods.some((item) => item.product_name === obj.product_name)) {
-      res.status(400).json({ text: "Этот товар уже есть в массиве", case: false });
-    } else {
-      let id = generateRandomId(8);
-      obj.id = id;
-      goods.push(obj);
-      res.json({ text: `Товар с именем ${obj.product_name} был добавлен`, id, case: true });
-    }
-  } catch (error) {
-    res.status(500).json({ text: "Ошибка добавления товара" });
   }
 });
 
