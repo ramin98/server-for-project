@@ -1,11 +1,9 @@
-
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const multer = require("multer");
 const path = require("path");
-const PORT = 5000;
-const app = express();
+const fs = require("fs");
 
 // Middleware setup
 app.use(cors());
@@ -27,6 +25,18 @@ const upload = multer({ storage });
 
 function generateRandomId(length) {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
+const PORT = 5000;
+const app = express();
+
+function generateRandomId(length) {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
@@ -85,10 +95,8 @@ let goods = [
   },
 ];
 
-
 let orders = [];
 
-// Routes
 app.get("/goods", async (req, res) => {
   try {
     res.json(goods);
@@ -116,10 +124,66 @@ app.post("/add-orders", async (req, res) => {
   }
 });
 
-// Add a new product with file upload
+app.delete("/delete-admin/:id", async (req, res) => {
+  try {
+    let id = req.params.id;
+    let item = goods.find((item) => id === item.id);
+    if (item) {
+      // Удаляем фото из файловой системы
+      if (item.url) {
+        const filePath = path.join(__dirname, "public", "photos", path.basename(item.url));
+        fs.unlink(filePath, (err) => {
+          if (err) console.error("Ошибка удаления файла:", err);
+        });
+      }
+      goods = goods.filter((item) => id !== item.id);
+      res.json({ text: `Товар ${item.product_name} был удален из товаров` });
+    } else {
+      res.status(404).json({ text: "Товар не найден" });
+    }
+  } catch (error) {
+    res.status(500).json({ text: "Ошибка удаления товара" });
+  }
+});
+
+// Edit product and change photo
+app.put("/change-admin/:id", upload.single("file"), async (req, res) => {
+  try {
+    let id = req.params.id;
+    let index = goods.findIndex((item) => id === item.id);
+    if (index !== -1) {
+      let oldFileUrl = goods[index].url;
+      const updatedData = JSON.parse(req.body.data);
+      
+      // Handle new file upload
+      if (req.file) {
+        const newFileUrl = `http://localhost:5000/photos/${req.file.filename}`;
+        updatedData.url = newFileUrl;
+
+        // Удаляем старый файл
+        if (oldFileUrl) {
+          const oldFilePath = path.join(__dirname, "public", "photos", path.basename(oldFileUrl));
+          fs.unlink(oldFilePath, (err) => {
+            if (err) console.error("Ошибка удаления старого файла:", err);
+          });
+        }
+      } else {
+        updatedData.url = oldFileUrl; // Keep the old URL if no file is uploaded
+      }
+
+      goods[index] = { ...updatedData, id: goods[index].id };
+      res.json({ text: `Товар ${updatedData.product_name} был изменен` });
+    } else {
+      res.status(404).json({ text: "Товар не найден" });
+    }
+  } catch (error) {
+    res.status(500).json({ text: "Ошибка изменения товара" });
+  }
+});
+
 app.post("/add-admin", upload.single("file"), async (req, res) => {
   try {
-    const obj = JSON.parse(req.body.data); // Parse JSON data sent along with the file
+    const obj = JSON.parse(req.body.data);
     if (goods.some((item) => item.product_name === obj.product_name)) {
       res.status(400).json({ text: "Этот товар уже есть в массиве", case: false });
     } else {
@@ -131,36 +195,6 @@ app.post("/add-admin", upload.single("file"), async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ text: "Ошибка добавления товара" });
-  }
-});
-
-app.delete("/delete-admin/:id", async (req, res) => {
-  try {
-    let id = req.params.id;
-    let item = goods.find((item) => id === item.id);
-    if (item) {
-      goods = goods.filter((item) => id !== item.id);
-      res.json({ text: `Товар ${item.product_name} был удален из товаров` });
-    } else {
-      res.status(404).json({ text: "Товар не найден" });
-    }
-  } catch (error) {
-    res.status(500).json({ text: "Ошибка удаления товара" });
-  }
-});
-
-app.put("/change-admin/:id", async (req, res) => {
-  try {
-    let id = req.params.id;
-    let index = goods.findIndex((item) => id === item.id);
-    if (index !== -1) {
-      goods[index] = { ...req.body, id: goods[index].id };
-      res.json({ text: `Товар ${req.body.product_name} был изменен` });
-    } else {
-      res.status(404).json({ text: "Товар не найден" });
-    }
-  } catch (error) {
-    res.status(500).json({ text: "Ошибка изменения товара" });
   }
 });
 
