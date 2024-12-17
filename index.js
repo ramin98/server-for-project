@@ -182,7 +182,7 @@ app.post("/add-admin", upload.single("file"), async (req, res) => {
       let id = generateRandomId(8);
       const newProduct = { ...obj, id, url: fileUrl };
       goods.push(newProduct);
-      res.json({ text: `Товар с именем ${obj.product_name} был добавлен`, id, case: true });
+      res.json({ text: `Товар с именем ${obj.product_name} был добавлен`, product:newProduct ,id, case: true });
     }
   } catch (error) {
     res.status(500).json({ text: "Ошибка добавления товара" });
