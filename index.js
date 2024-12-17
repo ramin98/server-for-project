@@ -5,6 +5,9 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
+const PORT = 5000;
+const app = express();
+
 // Middleware setup
 app.use(cors());
 app.use(bodyParser.json());
@@ -31,8 +34,7 @@ function generateRandomId(length) {
   }
   return result;
 }
-const PORT = 5000;
-const app = express();
+
 
 function generateRandomId(length) {
   const characters =
