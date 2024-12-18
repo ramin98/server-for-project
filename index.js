@@ -115,6 +115,48 @@ app.post("/add-orders", async (req, res) => {
   }
 });
 
+app.delete("/delete-admin/multiple", async (req, res) => {
+  try {
+    const { ids } = req.body; // Массив ID продуктов
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ text: "Не передан массив ID для удаления" });
+    }
+
+    const deletedProducts = [];
+
+    ids.forEach((id) => {
+      const index = goods.findIndex((item) => id === item.id);
+      if (index !== -1) {
+        const product = goods[index];
+        
+        // Удаление файла фото
+        if (product.url) {
+          const filePath = path.join(__dirname, "public", "photos", path.basename(product.url));
+          fs.unlink(filePath, (err) => {
+            if (err) console.error("Ошибка удаления файла:", err);
+          });
+        }
+
+        // Удаление продукта из массива
+        goods.splice(index, 1);
+        deletedProducts.push(product.product_name);
+      }
+    });
+
+    if (deletedProducts.length > 0) {
+      res.json({
+        text: `Товары (${deletedProducts.join(", ")}) были удалены`,
+        deleted: deletedProducts,
+      });
+    } else {
+      res.status(404).json({ text: "Ни один из товаров не найден для удаления" });
+    }
+  } catch (error) {
+    res.status(500).json({ text: "Ошибка при удалении товаров" });
+  }
+});
+
+
 app.delete("/delete-admin/:id", async (req, res) => {
   try {
     let id = req.params.id;
